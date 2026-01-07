@@ -25,14 +25,16 @@ defineEmits<{
   left: 0;
   width: 280px;
   height: 100vh;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-right: 1px solid var(--border);
+  background: var(--bg-primary);
   overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Neumorphism sidebar */
+.neumorphism-theme .sidebar {
+  box-shadow: 6px 0 16px rgb(163,177,198,0.5), -4px 0 10px rgba(255,255,255,0.4);
 }
 
 .sidebar-content {
@@ -44,26 +46,26 @@ defineEmits<{
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 2px;
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+/* Neumorphism scrollbar */
+.neumorphism-theme .sidebar::-webkit-scrollbar-thumb {
+  background: var(--bg-primary);
+  border-radius: 3px;
+  box-shadow: var(--shadow-extruded-small);
 }
 
 @media (min-width: 1024px) {
   .sidebar {
     position: sticky;
     top: 0;
-    height: calc(100vh - 56px);
+    height: calc(100vh - 64px);
     transform: translateX(0);
-    background: transparent;
-    border-right: none;
     box-shadow: none;
   }
 }

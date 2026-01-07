@@ -3,11 +3,12 @@ import { db } from '@/db'
 import type { Website } from '@/types'
 import { arrayBufferToUrl, fileToArrayBuffer } from './useImageUpload'
 
-export const useWebsites = () => {
-  const websites = ref<Website[]>([])
-  const selectedWebsite = ref<Website | null>(null)
-  const isLoading = ref(false)
+// 全局共享状态
+const websites = ref<Website[]>([])
+const selectedWebsite = ref<Website | null>(null)
+const isLoading = ref(false)
 
+export const useWebsites = () => {
   const loadWebsites = async () => {
     isLoading.value = true
     try {

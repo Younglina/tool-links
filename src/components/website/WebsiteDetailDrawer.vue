@@ -4,111 +4,102 @@
       <div v-if="isOpen" class="drawer-backdrop" @click="handleClose">
         <Transition name="slide-in-right">
           <div v-if="isOpen" class="drawer-content" @click.stop>
-        <div class="drawer-header">
-          <div class="drawer-icon-wrapper">
-            <img
-              v-if="iconUrl"
-              :src="iconUrl"
-              :alt="website.name"
-              class="drawer-icon"
-              @error="handleIconError"
-            />
-            <div v-else class="drawer-icon placeholder-icon">
-              <i class="mdi mdi-application-outline"></i>
-            </div>
-          </div>
-          <div class="flex-1">
-            <h2 class="text-xl font-bold">{{ website.name }}</h2>
-            <a
-              :href="website.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-[var(--accent)] hover:underline"
-            >
-              {{ website.url }}
-            </a>
-          </div>
-          <button @click="handleClose" class="close-btn">
-            <i class="mdi mdi-close text-xl"></i>
-          </button>
-        </div>
-
-        <div class="drawer-body">
-          <div class="info-section">
-            <h3 class="section-title">描述</h3>
-            <p class="text-[var(--text-secondary)]">{{ website.description }}</p>
-          </div>
-
-          <div class="info-section">
-            <h3 class="section-title">分类</h3>
-            <span class="category-badge">
-              <i :class="['mdi', `mdi-${category?.iconName}`]"></i>
-              {{ category?.name }}
-            </span>
-          </div>
-
-          <div class="info-section">
-            <h3 class="section-title">标签</h3>
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="tagId in website.tagIds"
-                :key="tagId"
-                class="tag-badge"
-              >
-                {{ getTagName(tagId) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3 class="section-title">API Keys</h3>
-            <div v-if="website.apiKeys.length > 0" class="api-keys-list">
-              <div
-                v-for="(key, index) in website.apiKeys"
-                :key="index"
-                class="api-key-row"
-              >
-                <span class="key-text">{{ maskApiKey(key) }}</span>
-                <button
-                  @click="copyApiKey(key)"
-                  :class="[
-                    'btn btn-sm',
-                    copiedKey === key ? 'text-green-500' : 'btn-secondary'
-                  ]"
+            <!-- Header -->
+            <div class="drawer-header">
+              <div class="header-icon">
+                <img
+                  v-if="iconUrl"
+                  :src="iconUrl"
+                  :alt="website.name"
+                  class="site-icon"
+                  @error="handleIconError"
+                />
+                <div v-else class="site-icon placeholder-icon">
+                  <i class="mdi mdi-web"></i>
+                </div>
+              </div>
+              <div class="header-info">
+                <h2 class="site-name">{{ website.name }}</h2>
+                <a
+                  :href="website.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="site-link"
                 >
-                  <i :class="['mdi', copiedKey === key ? 'mdi-check' : 'mdi-content-copy']"></i>
-                  {{ copiedKey === key ? '已复制' : '复制' }}
-                </button>
+                  {{ formatUrl(website.url) }}
+                  <i class="mdi mdi-open-in-new"></i>
+                </a>
+              </div>
+              <button @click="handleClose" class="close-btn">
+                <i class="mdi mdi-close"></i>
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="drawer-body">
+              <!-- Description -->
+              <div class="info-section" v-if="website.description">
+                <div class="section-label">
+                  <i class="mdi mdi-text-box-outline"></i>
+                  描述
+                </div>
+                <p class="description-text">{{ website.description }}</p>
+              </div>
+
+              <!-- Category -->
+              <div class="info-section">
+                <div class="section-label">
+                  <i class="mdi mdi-folder-outline"></i>
+                  分类
+                </div>
+                <span class="category-text">{{ category?.name || '未分类' }}</span>
+              </div>
+
+              <!-- Tags -->
+              <div class="info-section" v-if="website.tagIds?.length > 0">
+                <div class="section-label">
+                  <i class="mdi mdi-tag-multiple-outline"></i>
+                  标签
+                </div>
+                <div class="tags-row">
+                  <span
+                    v-for="tagId in website.tagIds"
+                    :key="tagId"
+                    class="tag-badge"
+                  >
+                    #{{ getTagName(tagId) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- API Keys -->
+              <div class="info-section" v-if="website.apiKeys?.length > 0">
+                <div class="section-label">
+                  <i class="mdi mdi-key-outline"></i>
+                  API Keys
+                  <span class="key-count">{{ website.apiKeys.length }}</span>
+                </div>
+                <div class="api-keys-list">
+                  <div
+                    v-for="(key, index) in website.apiKeys"
+                    :key="index"
+                    class="api-key-item"
+                  >
+                    <code class="key-text">{{ maskApiKey(key) }}</code>
+                    <button
+                      @click="copyApiKey(key)"
+                      :class="['copy-btn', { 'copied': copiedKey === key }]"
+                    >
+                      <i :class="['mdi', copiedKey === key ? 'mdi-check' : 'mdi-content-copy']"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div v-else class="text-[var(--text-secondary)]">暂无API Keys</div>
           </div>
-
-          <div class="info-section">
-            <h3 class="section-title">时间</h3>
-            <p class="text-[var(--text-secondary)] text-sm">
-              创建于：{{ formatDate(website.createdAt) }}
-            </p>
-            <p class="text-[var(--text-secondary)] text-sm">
-              更新于：{{ formatDate(website.updatedAt) }}
-            </p>
-          </div>
-        </div>
-
-        <div class="drawer-footer">
-          <button @click="handleEdit" class="btn btn-primary">
-            <i class="mdi mdi-pencil"></i>
-            编辑
-          </button>
-          <button @click="handleDelete" class="btn btn-danger">
-            <i class="mdi mdi-delete"></i>
-            删除
-          </button>
-        </div>
-        </div>
-      </Transition>
-    </div>
-  </Transition>
+        </Transition>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -127,8 +118,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'edit'): void
-  (e: 'delete'): void
 }>()
 
 const { categories, loadCategories } = useCategories()
@@ -167,18 +156,17 @@ const getTagName = (tagId: number) => {
   return tag?.name || ''
 }
 
+const formatUrl = (url: string) => {
+  try {
+    const urlObj = new URL(url)
+    return urlObj.hostname + (urlObj.pathname !== '/' ? urlObj.pathname : '')
+  } catch {
+    return url
+  }
+}
+
 const handleClose = () => {
   emit('close')
-}
-
-const handleEdit = () => {
-  emit('edit')
-}
-
-const handleDelete = () => {
-  if (confirm('确定要删除这个网站吗？')) {
-    emit('delete')
-  }
 }
 
 const copyApiKey = async (key: string) => {
@@ -204,94 +192,119 @@ onUnmounted(() => {
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
 }
 
 .drawer-content {
-  width: 480px;
+  width: 400px;
   max-width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-left: 1px solid var(--border);
-  overflow-y: auto;
+  background: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
 }
 
+.neumorphism-theme .drawer-content {
+  box-shadow: -16px 0 32px rgb(163,177,198,0.4);
+}
+
+/* Header */
 .drawer-header {
-  padding: 24px;
-  border-bottom: 1px solid var(--border);
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  position: sticky;
-  top: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: saturate(180%) blur(20px);
-  z-index: 10;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
-.drawer-icon-wrapper {
-  width: 80px;
-  height: 80px;
+.neumorphism-theme .drawer-header {
+  border-bottom: none;
+  box-shadow: 0 2px 8px rgb(163,177,198,0.2);
+}
+
+.header-icon {
   flex-shrink: 0;
 }
 
-.drawer-icon {
-  width: 100%;
-  height: 100%;
+.site-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   object-fit: cover;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: var(--bg-secondary);
 }
 
-.drawer-icon.placeholder-icon {
+.neumorphism-theme .site-icon {
+  box-shadow: var(--shadow-extruded-small);
+}
+
+.site-icon.placeholder-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
-  color: var(--text-secondary);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  color: #ffffff;
 }
 
-.drawer-icon.placeholder-icon .mdi {
-  font-size: 40px;
-  opacity: 0.4;
+.site-icon.placeholder-icon .mdi {
+  font-size: 28px;
 }
 
-.drawer-header .flex-1 {
+.header-info {
   flex: 1;
   min-width: 0;
 }
 
-.drawer-header h2 {
-  font-size: 1.5rem;
+.site-name {
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
-.drawer-header a {
-  font-size: 0.875rem;
+.site-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
   color: var(--accent);
-  word-break: break-all;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-link:hover {
+  text-decoration: underline;
+}
+
+.site-link .mdi {
+  font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .close-btn {
-  padding: 8px;
-  background: var(--bg-tertiary);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
   color: var(--text-secondary);
-  border-radius: 10px;
+  border-radius: 8px;
   flex-shrink: 0;
   transition: all 0.2s ease;
+}
+
+.neumorphism-theme .close-btn {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-extruded-small);
 }
 
 .close-btn:hover {
@@ -299,149 +312,177 @@ onUnmounted(() => {
   background: var(--hover-bg);
 }
 
+.neumorphism-theme .close-btn:hover {
+  box-shadow: var(--shadow-extruded);
+}
+
+.close-btn .mdi {
+  font-size: 1rem;
+}
+
+/* Body */
 .drawer-body {
   flex: 1;
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
 }
 
+/* Info Section */
 .info-section {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+.info-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
-.category-badge {
-  display: inline-flex;
+.neumorphism-theme .info-section {
+  border-bottom-color: rgba(163,177,198,0.15);
+}
+
+.section-label {
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--text-primary);
-  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.section-label .mdi {
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.description-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Category */
+.category-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* Tags Row */
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .tag-badge {
-  display: inline-block;
-  padding: 6px 14px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  color: var(--accent);
   font-weight: 500;
-  transition: all 0.2s ease;
 }
 
-.tag-badge:hover {
+/* API Keys */
+.key-count {
+  margin-left: 6px;
+  padding: 1px 6px;
   background: var(--accent);
-  border-color: var(--accent);
   color: #ffffff;
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 600;
 }
 
 .api-keys-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.api-key-row {
+.api-key-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  gap: 12px;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.neumorphism-theme .api-key-item {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-inset-small);
 }
 
 .key-text {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Monaco, 'Courier New', monospace;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
   flex: 1;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
   word-break: break-all;
 }
 
-.api-key-row .btn {
-  padding: 8px 16px;
-  border-radius: 10px;
+.copy-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.neumorphism-theme .copy-btn {
+  box-shadow: var(--shadow-extruded-small);
+}
+
+.copy-btn:hover {
+  color: var(--accent);
+}
+
+.copy-btn.copied {
+  background: #34c759;
+  color: #ffffff;
+}
+
+.copy-btn .mdi {
   font-size: 0.875rem;
 }
 
-.api-key-row .btn-secondary {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-}
-
-.drawer-footer {
-  padding: 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 12px;
-  position: sticky;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: saturate(180%) blur(20px);
-  align-items: center;
-  justify-content: flex-end;
-}
-
+/* Responsive */
 @media (max-width: 640px) {
   .drawer-content {
     width: 100%;
   }
 
   .drawer-header {
-    padding: 20px;
-    gap: 16px;
+    padding: 16px;
   }
 
-  .drawer-icon-wrapper {
-    width: 64px;
-    height: 64px;
+  .site-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
   }
 
-  .drawer-icon {
-    border-radius: 14px;
-  }
-
-  .drawer-icon.placeholder-icon .mdi {
-    font-size: 32px;
-  }
-
-  .drawer-header h2 {
-    font-size: 1.25rem;
+  .site-name {
+    font-size: 1rem;
   }
 
   .drawer-body {
-    padding: 20px;
-  }
-
-  .drawer-footer {
-    padding: 20px;
-    flex-direction: column;
-  }
-
-  .drawer-footer .btn {
-    width: 100%;
-    justify-content: center;
+    padding: 16px;
   }
 }
 
+/* Transitions */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,
@@ -451,7 +492,7 @@ onUnmounted(() => {
 
 .slide-in-right-enter-active,
 .slide-in-right-leave-active {
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .slide-in-right-enter-from,

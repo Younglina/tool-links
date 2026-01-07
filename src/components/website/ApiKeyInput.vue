@@ -10,6 +10,7 @@
         <span class="flex-1 font-mono text-sm">{{ maskKey(key) }}</span>
         <div class="flex gap-2">
           <button
+            type="button"
             @click="copyKey(key)"
             :class="[
               'btn btn-sm',
@@ -20,15 +21,13 @@
             <i :class="['mdi', copiedKey === key ? 'mdi-check' : 'mdi-content-copy']"></i>
           </button>
           <button
+            type="button"
             @click="removeKey(index)"
             class="btn btn-sm btn-danger"
           >
             <i class="mdi mdi-delete"></i>
           </button>
         </div>
-      </div>
-      <div v-if="apiKeys.length === 0" class="text-[var(--text-secondary)] text-sm">
-        暂无API Keys
       </div>
     </div>
     <div class="mt-2 flex gap-2">
@@ -38,9 +37,10 @@
         placeholder="输入新的API Key"
         class="input flex-1"
         id="api-key-input"
-        @keyup.enter="addKey"
+        @keydown.enter.prevent="addKey"
       />
       <button
+        type="button"
         @click="addKey"
         class="btn btn-primary"
       >
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, toRaw } from 'vue'
 import { useApiKey } from '@/composables/useApiKey'
 
 const props = defineProps<{
@@ -65,30 +65,45 @@ const emit = defineEmits<{
 
 const { copiedKey, isCopying, maskKey, copyKey } = useApiKey()
 
-const apiKeys = ref<string[]>([...props.modelValue])
+const apiKeys = ref<string[]>([])
 const newKey = ref('')
 
+// 初始化和同步
 watch(() => props.modelValue, (newValue) => {
-  apiKeys.value = [...newValue]
-})
+  if (newValue) {
+    apiKeys.value = [...newValue]
+  }
+}, { immediate: true, deep: true })
 
 const addKey = () => {
   const trimmed = newKey.value.trim()
   if (trimmed) {
-    apiKeys.value.push(trimmed)
+    const newKeys = [...apiKeys.value, trimmed]
+    apiKeys.value = newKeys
     newKey.value = ''
-    emitUpdate()
+    emit('update:modelValue', newKeys)
   }
 }
 
 const removeKey = (index: number) => {
-  apiKeys.value.splice(index, 1)
-  emitUpdate()
+  const newKeys = apiKeys.value.filter((_, i) => i !== index)
+  apiKeys.value = newKeys
+  emit('update:modelValue', newKeys)
 }
 
-const emitUpdate = () => {
-  emit('update:modelValue', [...apiKeys.value])
+// 获取包含当前输入框内容的所有 keys
+const getAllKeys = (): string[] => {
+  const trimmed = newKey.value.trim()
+  if (trimmed) {
+    return [...apiKeys.value, trimmed]
+  }
+  return [...apiKeys.value]
 }
+
+// 暴露方法给父组件
+defineExpose({
+  getAllKeys
+})
 </script>
 
 <style scoped>

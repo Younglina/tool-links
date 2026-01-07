@@ -28,6 +28,7 @@ export const useCategories = () => {
   const addCategory = async (category: Omit<Category, 'id'>) => {
     try {
       await db.categories.add(category)
+      categoriesLoaded = false
       await loadCategories()
     } catch (error) {
       console.error('Failed to add category:', error)
@@ -38,6 +39,7 @@ export const useCategories = () => {
   const updateCategory = async (id: number, updates: Partial<Category>) => {
     try {
       await db.categories.update(id, updates)
+      categoriesLoaded = false
       await loadCategories()
     } catch (error) {
       console.error('Failed to update category:', error)
@@ -48,6 +50,7 @@ export const useCategories = () => {
   const deleteCategory = async (id: number) => {
     try {
       await db.categories.delete(id)
+      categoriesLoaded = false
       await loadCategories()
     } catch (error) {
       console.error('Failed to delete category:', error)

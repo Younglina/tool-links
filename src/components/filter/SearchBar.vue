@@ -45,7 +45,7 @@ const clearSearch = () => {
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 18px;
   color: var(--text-secondary);
   font-size: 1.125rem;
   pointer-events: none;
@@ -53,41 +53,49 @@ const clearSearch = () => {
 
 .search-input {
   width: 100%;
-  padding: 12px 48px 12px 44px;
+  padding: 14px 48px 14px 48px;
   border-radius: 12px;
   font-size: 0.9375rem;
   font-weight: 400;
-  background: var(--bg-tertiary);
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
+  background: var(--bg-primary);
+  border: none;
+  transition: all 0.3s ease-out;
   color: var(--text-primary);
 }
 
-.search-input:focus {
-  background: var(--bg-secondary);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.08);
-  outline: none;
+/* Neumorphism search input */
+.neumorphism-theme .search-input {
+  box-shadow: var(--shadow-inset);
+}
+
+.neumorphism-theme .search-input:focus {
+  box-shadow: var(--shadow-inset-deep);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .search-input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
+  color: #A0AEC0;
 }
 
 .clear-btn {
   position: absolute;
-  right: 12px;
-  padding: 4px;
+  right: 14px;
+  padding: 6px;
   background: transparent;
   color: var(--text-secondary);
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease-out;
 }
 
 .clear-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-tertiary);
+}
+
+/* Neumorphism clear button */
+.neumorphism-theme .clear-btn:hover {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-extruded-small);
 }
 
 .clear-btn .mdi {
@@ -96,13 +104,13 @@ const clearSearch = () => {
 
 @media (max-width: 640px) {
   .search-input {
-    padding: 10px 40px 10px 40px;
-    border-radius: 10px;
+    padding: 12px 40px 12px 44px;
+    border-radius: 14px;
     font-size: 0.875rem;
   }
 
   .search-icon {
-    left: 12px;
+    left: 14px;
     font-size: 1rem;
   }
 

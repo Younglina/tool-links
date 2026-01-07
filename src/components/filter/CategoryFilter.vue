@@ -16,7 +16,7 @@
         <span class="category-count">{{ totalCount }}</span>
       </li>
       <li
-        v-for="category in builtinCategories"
+        v-for="category in categoriesWithCount"
         :key="category.id"
         @click="selectCategory(category.id)"
         :class="[
@@ -28,29 +28,36 @@
           <i :class="['mdi', `mdi-${category.iconName}`]"></i>
         </div>
         <span class="category-name">{{ category.name }}</span>
-        <span class="category-count">0</span>
+        <span class="category-count">{{ category.count }}</span>
       </li>
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { DEFAULT_CATEGORIES } from '@/utils/constants'
+import { useCategories } from '@/composables/useCategories'
+import { useWebsites } from '@/composables/useWebsites'
 
 const appStore = useAppStore()
+const { categories, loadCategories } = useCategories()
+const { websites, loadWebsites } = useWebsites()
 
-const builtinCategories = ref(
-  DEFAULT_CATEGORIES.map((cat, index) => ({
-    ...cat,
-    id: index + 1
-  }))
-)
+onMounted(async () => {
+  await Promise.all([loadCategories(), loadWebsites()])
+})
 
 const selectedCategoryId = computed(() => appStore.filter.categoryId)
 
-const totalCount = ref(0)
+const totalCount = computed(() => websites.value.length)
+
+const categoriesWithCount = computed(() => {
+  return categories.value.map(category => ({
+    ...category,
+    count: websites.value.filter(w => w.categoryId === category.id).length
+  }))
+})
 
 const selectCategory = (id: number | null) => {
   appStore.setCategoryId(id)
@@ -68,59 +75,69 @@ const selectCategory = (id: number | null) => {
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 0 8px 12px 8px;
+  padding: 0 8px 16px 8px;
 }
 
 .category-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .category-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  margin: 0 -4px;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease-out;
   color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: 500;
+  background: var(--bg-primary);
 }
 
-.category-item:hover {
-  background: var(--hover-bg);
+/* Neumorphism category item */
+.neumorphism-theme .category-item {
+  box-shadow: var(--shadow-extruded-small);
 }
 
-.category-item.active {
-  background: var(--bg-tertiary);
+.neumorphism-theme .category-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-extruded);
+}
+
+.neumorphism-theme .category-item.active {
+  box-shadow: var(--shadow-inset);
   color: var(--accent);
-  font-weight: 600;
 }
 
 .category-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: var(--bg-tertiary);
+  border-radius: 12px;
+  background: var(--bg-primary);
   color: var(--text-secondary);
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease-out;
 }
 
-.category-item:hover .category-icon {
-  background: var(--bg-secondary);
+/* Neumorphism category icon */
+.neumorphism-theme .category-icon {
+  box-shadow: var(--shadow-inset-small);
 }
 
-.category-item.active .category-icon {
+.neumorphism-theme .category-item.active .category-icon {
   background: var(--accent);
   color: #ffffff;
+  box-shadow: 3px 3px 6px rgba(108, 99, 255, 0.4), -3px -3px 6px rgba(139, 132, 255, 0.3);
 }
 
 .category-icon .mdi {
@@ -135,18 +152,24 @@ const selectCategory = (id: number | null) => {
 .category-count {
   font-size: 0.8125rem;
   color: var(--text-secondary);
-  font-weight: 400;
-  background: var(--bg-tertiary);
-  padding: 2px 8px;
+  font-weight: 500;
+  padding: 3px 10px;
   border-radius: 12px;
-  min-width: 24px;
+  min-width: 28px;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease-out;
+  background: var(--bg-primary);
 }
 
-.category-item.active .category-count {
+/* Neumorphism category count */
+.neumorphism-theme .category-count {
+  box-shadow: var(--shadow-inset-small);
+}
+
+.neumorphism-theme .category-item.active .category-count {
   background: var(--accent);
   color: #ffffff;
-  font-weight: 600;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.15), inset -2px -2px 4px rgba(255,255,255,0.1);
 }
+
 </style>

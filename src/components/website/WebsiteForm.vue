@@ -79,6 +79,7 @@
       </div>
 
       <ApiKeyInput
+        ref="apiKeyInputRef"
         :modelValue="form.apiKeys"
         @update:modelValue="handleApiKeysUpdate"
       />
@@ -97,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, toRaw, watch } from 'vue'
 import type { Website } from '@/types'
 import { useCategories } from '@/composables/useCategories'
 import { useTags } from '@/composables/useTags'
@@ -119,6 +120,7 @@ const { tags, loadTags } = useTags()
 
 const isEditing = computed(() => !!props.website)
 const isSubmitting = ref(false)
+const apiKeyInputRef = ref<InstanceType<typeof ApiKeyInput> | null>(null)
 
 const form = reactive({
   name: '',
@@ -134,18 +136,31 @@ const form = reactive({
 onMounted(() => {
   loadCategories()
   loadTags()
-
-  if (props.website) {
-    form.name = props.website.name
-    form.url = props.website.url
-    form.icon = props.website.icon
-    form.iconMimeType = props.website.iconMimeType
-    form.description = props.website.description
-    form.categoryId = props.website.categoryId
-    form.tagIds = [...props.website.tagIds]
-    form.apiKeys = [...props.website.apiKeys]
-  }
 })
+
+// 监听 website prop 变化，初始化表单数据
+watch(() => props.website, (website) => {
+  if (website) {
+    form.name = website.name
+    form.url = website.url
+    form.icon = website.icon
+    form.iconMimeType = website.iconMimeType
+    form.description = website.description
+    form.categoryId = website.categoryId
+    form.tagIds = [...(website.tagIds || [])]
+    form.apiKeys = [...(website.apiKeys || [])]
+  } else {
+    // 重置表单
+    form.name = ''
+    form.url = ''
+    form.icon = new ArrayBuffer(0)
+    form.iconMimeType = ''
+    form.description = ''
+    form.categoryId = 0
+    form.tagIds = []
+    form.apiKeys = []
+  }
+}, { immediate: true })
 
 const handleIconUpload = (data: { buffer: ArrayBuffer; mimeType: string }) => {
   form.icon = data.buffer
@@ -165,15 +180,19 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
+    // 获取所有 API Keys，包括输入框中未点击添加的
+    const allApiKeys = apiKeyInputRef.value?.getAllKeys() || [...form.apiKeys]
+
+    const rawForm = toRaw(form)
     const dataToSubmit: Omit<Website, 'id' | 'createdAt' | 'updatedAt'> = {
-      name: form.name,
-      url: form.url,
-      icon: form.icon,
-      iconMimeType: form.iconMimeType,
-      description: form.description,
-      categoryId: form.categoryId,
-      tagIds: [...form.tagIds],
-      apiKeys: [...form.apiKeys]
+      name: rawForm.name,
+      url: rawForm.url,
+      icon: rawForm.icon,
+      iconMimeType: rawForm.iconMimeType,
+      description: rawForm.description,
+      categoryId: rawForm.categoryId,
+      tagIds: [...rawForm.tagIds],
+      apiKeys: allApiKeys
     }
     emit('submit', dataToSubmit)
   } finally {
@@ -190,18 +209,18 @@ const handleApiKeysUpdate = (value: string[]) => {
 }
 </script>
 
-<style scoped>
+<style >
 .website-form {
   max-width: 600px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px;
 }
 
 .website-form h2 {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 24px 0;
+  margin: 0 0 28px 0;
   letter-spacing: -0.02em;
 }
 
@@ -209,7 +228,7 @@ const handleApiKeysUpdate = (value: string[]) => {
   display: block;
   font-size: 0.9375rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -217,27 +236,40 @@ const handleApiKeysUpdate = (value: string[]) => {
 .website-form input,
 .website-form textarea,
 .website-form select {
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 14px 16px;
+  border-radius: 12px;
   font-size: 1rem;
-  background: var(--bg-tertiary);
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
+  background: var(--bg-primary);
+  border: none;
+  transition: all 0.3s ease-out;
   font-family: var(--font-secondary);
+  color: var(--text-primary);
 }
 
-.website-form input:focus,
-.website-form textarea:focus,
-.website-form select:focus {
-  background: var(--bg-secondary);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.08);
-  outline: none;
+/* Neumorphism form inputs */
+.neumorphism-theme .website-form input,
+.neumorphism-theme .website-form textarea,
+.neumorphism-theme .website-form select {
+  box-shadow: var(--shadow-inset);
+}
+
+.neumorphism-theme .website-form input:focus,
+.neumorphism-theme .website-form textarea:focus,
+.neumorphism-theme .website-form select:focus {
+  box-shadow: var(--shadow-inset-deep);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+.website-form input::placeholder,
+.website-form textarea::placeholder {
+  color: #A0AEC0;
 }
 
 .website-form textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 100px;
 }
 
 .tag-checkbox {
@@ -247,28 +279,34 @@ const handleApiKeysUpdate = (value: string[]) => {
 
 .tag-label {
   display: inline-block;
-  padding: 4px 10px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  padding: 8px 14px;
+  background: var(--bg-primary);
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease-out;
   user-select: none;
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-.tag-label:hover {
-  background: var(--bg-secondary);
-  border-color: var(--accent);
+/* Neumorphism tag label */
+.neumorphism-theme .tag-label {
+  box-shadow: var(--shadow-extruded-small);
+  border: none;
 }
 
-input:checked + .tag-label {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #ffffff;
+.neumorphism-theme .tag-label:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-extruded);
 }
+
+.neumorphism-theme input:checked + .tag-label {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2), inset -3px -3px 6px rgba(255,255,255,0.1);
+}
+
 
 .website-form .flex {
   display: flex;
@@ -292,15 +330,49 @@ input:checked + .tag-label {
 }
 
 .website-form .pt-4 {
-  padding-top: 16px;
+  padding-top: 20px;
 }
 
 .website-form .space-y-4 > * + * {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .website-form .space-y-2 > * + * {
   margin-top: 8px;
+}
+
+/* Neumorphism buttons in form */
+.neumorphism-theme .website-form .btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-weight: 600;
+  box-shadow: 5px 5px 10px rgb(163,177,198,0.6), -5px -5px 10px rgba(255,255,255,0.5);
+  transition: all 0.3s ease-out;
+}
+
+.neumorphism-theme .website-form .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 8px 8px 16px rgb(163,177,198,0.7), -8px -8px 16px rgba(255,255,255,0.6);
+  background: var(--accent-light);
+}
+
+.neumorphism-theme .website-form .btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-weight: 600;
+  box-shadow: var(--shadow-extruded-small);
+  transition: all 0.3s ease-out;
+}
+
+.neumorphism-theme .website-form .btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-extruded);
 }
 
 @media (max-width: 640px) {

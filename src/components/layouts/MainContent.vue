@@ -37,6 +37,8 @@
           :website="website"
           :class="`stagger-${(index % 6) + 1}`"
           @click="showDetail(website)"
+          @edit="handleCardEdit(website)"
+          @delete="handleCardDelete(website)"
         />
       </div>
     </div>
@@ -46,8 +48,6 @@
       :is-open="showDetailDrawer"
       :website="selectedWebsite"
       @close="closeDetailDrawer"
-      @edit="handleEditWebsite"
-      @delete="handleDeleteWebsite"
     />
 
     <div v-if="showAddForm || showEditForm" class="modal-backdrop">
@@ -55,17 +55,19 @@
         <button @click="closeForm" class="close-modal-btn">
           <i class="mdi mdi-close text-xl"></i>
         </button>
-        <WebsiteForm
-          v-if="showAddForm"
-          @submit="handleAddWebsite"
-          @cancel="closeForm"
-        />
-        <WebsiteForm
-          v-else
-          :website="editingWebsite"
-          @submit="handleUpdateWebsite"
-          @cancel="closeForm"
-        />
+        <div class="modal-scroll-area">
+          <WebsiteForm
+            v-if="showAddForm"
+            @submit="handleAddWebsite"
+            @cancel="closeForm"
+          />
+          <WebsiteForm
+            v-else
+            :website="editingWebsite"
+            @submit="handleUpdateWebsite"
+            @cancel="closeForm"
+          />
+        </div>
       </div>
     </div>
 
@@ -186,6 +188,20 @@ const handleEditWebsite = () => {
   showEditForm.value = true
 }
 
+const handleCardEdit = (website: Website) => {
+  editingWebsite.value = website
+  showEditForm.value = true
+}
+
+const handleCardDelete = async (website: Website) => {
+  try {
+    await deleteWebsite(website.id!)
+  } catch (error) {
+    console.error('Failed to delete website:', error)
+    alert('删除网站失败')
+  }
+}
+
 const handleUpdateWebsite = async (data: Omit<Website, 'id' | 'createdAt' | 'updatedAt'>) => {
   if (editingWebsite.value?.id) {
     try {
@@ -233,8 +249,8 @@ const handleTagSubmit = async (data) => {
 <style scoped>
 .main-content {
   flex: 1;
-  padding: 24px 32px;
-  min-height: calc(100vh - 56px);
+  padding: 28px 36px;
+  min-height: calc(100vh - 64px);
   background: var(--bg-primary);
 }
 
@@ -252,11 +268,56 @@ const handleTagSubmit = async (data) => {
 }
 
 .content-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+/* Neumorphism btn-primary */
+.neumorphism-theme .btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 600;
+  box-shadow: 5px 5px 10px rgb(163,177,198,0.6), -5px -5px 10px rgba(255,255,255,0.5);
+  transition: all 0.3s ease-out;
+}
+
+.neumorphism-theme .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 8px 8px 16px rgb(163,177,198,0.7), -8px -8px 16px rgba(255,255,255,0.6);
+  background: var(--accent-light);
+}
+
+.neumorphism-theme .btn-primary:active {
+  transform: translateY(0.5px);
+  box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2), inset -3px -3px 6px rgba(255,255,255,0.1);
+}
+
+/* Neumorphism btn-secondary */
+.neumorphism-theme .btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 600;
+  box-shadow: var(--shadow-extruded-small);
+  transition: all 0.3s ease-out;
+}
+
+.neumorphism-theme .btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-extruded);
+}
+
+.neumorphism-theme .btn-secondary:active {
+  transform: translateY(0.5px);
+  box-shadow: var(--shadow-inset-small);
 }
 
 .loading-container {
@@ -288,12 +349,19 @@ const handleTagSubmit = async (data) => {
   min-height: 400px;
   text-align: center;
   padding: 60px 20px;
+  background: var(--bg-primary);
+  border-radius: 32px;
+}
+
+/* Neumorphism empty state */
+.neumorphism-theme .empty-state {
+  box-shadow: var(--shadow-inset);
 }
 
 .empty-state .mdi {
   font-size: 64px;
-  color: var(--border);
-  opacity: 0.5;
+  color: var(--text-secondary);
+  opacity: 0.4;
   margin-bottom: 16px;
 }
 
@@ -302,13 +370,13 @@ const handleTagSubmit = async (data) => {
   margin-top: 0;
   font-size: 1rem;
   max-width: 360px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .websites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
   padding: 4px;
 }
 
@@ -326,32 +394,54 @@ const handleTagSubmit = async (data) => {
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  background: var(--bg-primary);
+  border-radius: 24px;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-scroll-area {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Neumorphism modal */
+.neumorphism-theme .modal-content {
+  border: none;
 }
 
 .close-modal-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 8px;
-  background: var(--bg-tertiary);
+  top: 20px;
+  right: 20px;
+  padding: 10px;
+  background: var(--bg-primary);
   color: var(--text-secondary);
   z-index: 10;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  transition: all 0.3s ease-out;
 }
 
-.close-modal-btn:hover {
+/* Neumorphism close button */
+.neumorphism-theme .close-modal-btn {
+  box-shadow: var(--shadow-extruded-small);
+}
+
+.neumorphism-theme .close-modal-btn:hover {
   color: var(--text-primary);
-  background: var(--hover-bg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-extruded);
+}
+
+.neumorphism-theme .close-modal-btn:active {
+  transform: translateY(0.5px);
+  box-shadow: var(--shadow-inset-small);
 }
 
 .close-modal-btn .mdi {
@@ -360,7 +450,7 @@ const handleTagSubmit = async (data) => {
 
 @media (max-width: 1024px) {
   .main-content {
-    padding: 20px 24px;
+    padding: 24px 28px;
   }
 
   .content-header {
@@ -368,18 +458,18 @@ const handleTagSubmit = async (data) => {
   }
 
   .content-header h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .websites-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
   }
 }
 
 @media (max-width: 640px) {
   .main-content {
-    padding: 16px 16px;
+    padding: 20px 16px;
   }
 
   .content-header {
@@ -389,17 +479,18 @@ const handleTagSubmit = async (data) => {
   }
 
   .content-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
   }
 
   .websites-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
 
   .empty-state {
     min-height: 300px;
     padding: 40px 20px;
+    border-radius: 24px;
   }
 
   .empty-state .mdi {

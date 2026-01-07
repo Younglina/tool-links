@@ -1,5 +1,5 @@
 @import '@mdi/font/css/materialdesignicons.min.css';
-@import './themes/zen.css';
+@import './themes/neumorphism.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,7 +58,7 @@ input, textarea, select {
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow);

@@ -42,7 +42,19 @@ const toggleSidebar = () => {
   position: relative;
 }
 
-.zen-theme {
-  font-family: 'Zen Kaku Gothic New', sans-serif;
+.neumorphism-theme {
+  font-family: 'DM Sans', sans-serif;
+  background-color: #E0E5EC;
+}
+
+.neumorphism-theme h1,
+.neumorphism-theme h2,
+.neumorphism-theme h3,
+.neumorphism-theme h4,
+.neumorphism-theme h5,
+.neumorphism-theme h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 </style>

@@ -24,8 +24,6 @@ export interface Tag {
   count: number
 }
 
-export type Theme = 'zen'
-
 export interface FilterState {
   categoryId: number | null
   tagIds: number[]

@@ -3,6 +3,16 @@
     @click="handleClick"
     class="website-card"
   >
+    <!-- Hover Actions -->
+    <div class="card-actions">
+      <button @click.stop="handleEdit" class="action-btn" title="编辑">
+        <i class="mdi mdi-pencil-outline"></i>
+      </button>
+      <button @click.stop="handleDelete" class="action-btn action-delete" title="删除">
+        <i class="mdi mdi-delete-outline"></i>
+      </button>
+    </div>
+
     <div class="card-header">
       <div class="card-icon-wrapper">
         <img
@@ -18,23 +28,30 @@
       </div>
       <div class="card-info">
         <h3 class="website-name">{{ website.name }}</h3>
-        <div class="card-tags">
-          <span
-            v-for="tagId in website.tagIds.slice(0, 3)"
-            :key="tagId"
-            class="tag"
-          >
-            {{ getTagName(tagId) }}
-          </span>
-          <span v-if="website.tagIds.length > 3" class="tag-more">
-            +{{ website.tagIds.length - 3 }}
-          </span>
-        </div>
+        <!-- Category as tag style -->
+        <span class="category-tag" v-if="categoryName">
+          {{ categoryName }}
+        </span>
       </div>
     </div>
+
     <p class="description line-clamp-2">
       {{ website.description }}
     </p>
+
+    <!-- Tags as #tagname -->
+    <div class="card-tags" v-if="(website.tagIds || []).length > 0">
+      <span
+        v-for="tagId in (website.tagIds || []).slice(0, 4)"
+        :key="tagId"
+        class="hash-tag"
+      >
+        #{{ getTagName(tagId) }}
+      </span>
+      <span v-if="(website.tagIds?.length || 0) > 4" class="hash-tag more">
+        +{{ website.tagIds.length - 4 }}
+      </span>
+    </div>
   </div>
 </template>
 
@@ -50,12 +67,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'click'): void
+  (e: 'edit'): void
+  (e: 'delete'): void
 }>()
 
-const { categories } = useCategories()
+const { categories, loadCategories } = useCategories()
 const { tags, loadTags } = useTags()
 
 onMounted(() => {
+  loadCategories()
   loadTags()
 })
 
@@ -72,27 +92,29 @@ const iconUrl = computed(() => {
   }
 })
 
-const getCategoryName = (categoryId: number) => {
-  const category = categories.value.find(c => c.id === categoryId)
-  return category?.name || ''
-}
+const category = computed(() => {
+  return categories.value.find(c => c.id === props.website.categoryId)
+})
+
+const categoryName = computed(() => category.value?.name || '')
 
 const getTagName = (tagId: number) => {
   const tag = tags.value.find(t => t.id === tagId)
   return tag?.name || ''
 }
 
-const getDomain = (url: string) => {
-  try {
-    const domain = new URL(url).hostname
-    return domain.replace('www.', '')
-  } catch {
-    return url
-  }
-}
-
 const handleClick = () => {
   emit('click')
+}
+
+const handleEdit = () => {
+  emit('edit')
+}
+
+const handleDelete = () => {
+  if (confirm('确定要删除这个网站吗？')) {
+    emit('delete')
+  }
 }
 
 const handleIconError = () => {
@@ -109,27 +131,78 @@ onUnmounted(() => {
 <style scoped>
 .website-card {
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  transition: all 0.3s ease-out;
+  background: var(--bg-primary);
   border-radius: 16px;
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: var(--shadow);
+  position: relative;
 }
 
-.website-card:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: var(--shadow-hover);
-  border-color: rgba(0, 122, 255, 0.2);
+/* Card Actions */
+.card-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.website-card:hover .card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.neumorphism-theme .action-btn {
+  box-shadow: var(--shadow-extruded-small);
+}
+
+.action-btn:hover {
+  color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.action-btn.action-delete:hover {
+  color: #ff3b30;
+}
+
+.action-btn .mdi {
+  font-size: 1rem;
+}
+
+/* Neumorphism card */
+.neumorphism-theme .website-card {
+  box-shadow: var(--shadow-extruded);
+  border: none;
+}
+
+.neumorphism-theme .website-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-extruded-hover);
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .card-icon-wrapper {
@@ -142,23 +215,31 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  background: var(--bg-primary);
+}
+
+/* Neumorphism icon */
+.neumorphism-theme .website-icon {
+  box-shadow: var(--shadow-inset);
+  border: none;
 }
 
 .website-icon.placeholder-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
   color: var(--text-secondary);
+}
+
+/* Neumorphism placeholder icon */
+.neumorphism-theme .website-icon.placeholder-icon {
+  box-shadow: var(--shadow-inset-deep);
 }
 
 .website-icon.placeholder-icon .mdi {
   font-size: 28px;
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 .card-info {
@@ -170,7 +251,7 @@ onUnmounted(() => {
 }
 
 .website-name {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -181,41 +262,49 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+/* Category Tag */
+.category-tag {
+  display: inline-block;
+  width: fit-content;
+  padding: 4px 10px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  transition: all 0.3s ease-out;
+}
+
+.neumorphism-theme .category-tag {
+  box-shadow: var(--shadow-inset-small);
+}
+
+/* Hash Tags */
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
+  margin-top: auto;
 }
 
-.tag {
-  display: inline-block;
-  padding: 3px 8px;
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  border-radius: 10px;
-  font-size: 0.6875rem;
+.hash-tag {
+  font-size: 0.75rem;
+  color: var(--accent);
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
 }
 
-.tag:hover {
-  background: var(--accent);
-  color: #ffffff;
+.hash-tag:hover {
+  color: var(--accent-light);
 }
 
-.tag-more {
-  display: inline-block;
-  padding: 3px 8px;
-  background: var(--bg-tertiary);
+.hash-tag.more {
   color: var(--text-secondary);
-  border-radius: 10px;
-  font-size: 0.6875rem;
-  font-weight: 500;
 }
 
 .description {
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--text-secondary);
   margin: 0;
   display: -webkit-box;
@@ -227,8 +316,8 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .website-card {
-    padding: 12px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 16px;
     gap: 10px;
   }
 
@@ -238,7 +327,7 @@ onUnmounted(() => {
   }
 
   .website-icon {
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .website-icon.placeholder-icon .mdi {
@@ -251,6 +340,10 @@ onUnmounted(() => {
 
   .description {
     font-size: 0.8125rem;
+  }
+
+  .hash-tag {
+    font-size: 0.6875rem;
   }
 }
 </style>

@@ -1,23 +1,20 @@
 import { ref, onMounted, watch } from 'vue'
-import type { Theme } from '@/types'
 
 export const useTheme = () => {
-  const currentTheme = ref<Theme>('zen')
+  const currentTheme = ref('neumorphism')
 
-  const themes: Theme[] = ['zen']
-
-  const setTheme = (theme: Theme) => {
+  const setTheme = (theme: string) => {
     currentTheme.value = theme
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }
 
   const loadTheme = () => {
-    const savedTheme = localStorage.getItem('theme') as Theme
-    if (savedTheme && themes.includes(savedTheme)) {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'neumorphism') {
       setTheme(savedTheme)
     } else {
-      setTheme('zen')
+      setTheme('neumorphism')
     }
   }
 
@@ -27,7 +24,6 @@ export const useTheme = () => {
 
   return {
     currentTheme,
-    themes,
     setTheme
   }
 }
