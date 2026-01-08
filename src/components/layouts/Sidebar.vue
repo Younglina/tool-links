@@ -21,7 +21,7 @@ defineEmits<{
 <style scoped>
 .sidebar {
   position: fixed;
-  top: 0;
+  top: 60px;
   left: 0;
   width: 280px;
   height: 100vh;
@@ -63,7 +63,7 @@ defineEmits<{
 @media (min-width: 1024px) {
   .sidebar {
     position: sticky;
-    top: 0;
+    top: 60px;
     height: calc(100vh - 64px);
     transform: translateX(0);
     box-shadow: none;

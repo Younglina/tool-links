@@ -46,13 +46,21 @@
                 <p class="description-text">{{ website.description }}</p>
               </div>
 
-              <!-- Category -->
-              <div class="info-section">
+              <!-- Categories -->
+              <div class="info-section" v-if="categoryNames.length > 0">
                 <div class="section-label">
                   <i class="mdi mdi-folder-outline"></i>
                   分类
                 </div>
-                <span class="category-text">{{ category?.name || '未分类' }}</span>
+                <div class="categories-row">
+                  <span
+                    v-for="name in categoryNames"
+                    :key="name"
+                    class="category-badge"
+                  >
+                    {{ name }}
+                  </span>
+                </div>
               </div>
 
               <!-- Tags -->
@@ -148,7 +156,13 @@ const iconUrl = computed(() => {
 })
 
 const category = computed(() => {
-  return categories.value.find(c => c.id === props.website.categoryId)
+  return categories.value.find(c => (props.website.categoryIds || []).includes(c.id!))
+})
+
+const categoryNames = computed(() => {
+  return (props.website.categoryIds || [])
+    .map(id => categories.value.find(c => c.id === id)?.name)
+    .filter(Boolean) as string[]
 })
 
 const getTagName = (tagId: number) => {
@@ -367,9 +381,25 @@ onUnmounted(() => {
 }
 
 /* Category */
-.category-text {
-  font-size: 0.875rem;
+.categories-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
   color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.neumorphism-theme .category-badge {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-inset-small);
 }
 
 /* Tags Row */

@@ -3,13 +3,6 @@
     <div class="content-wrapper">
       <div class="content-header">
         <h1 class="text-2xl font-bold">{{ title }}</h1>
-        <button
-          @click="showAddForm = true"
-          class="btn btn-primary"
-        >
-          <i class="mdi mdi-plus"></i>
-          添加网站
-        </button>
       </div>
 
       <div v-if="isLoading" class="loading-container">
@@ -19,7 +12,7 @@
 
       <div v-else-if="filteredWebsites.length === 0" class="empty-state">
         <i class="mdi mdi-folder-multiple text-6xl text-[var(--text-secondary)]"></i>
-        <p class="text-[var(--text-secondary)] mt-4">还没有对应网站，点击上方按钮添加第一个网站吧</p>
+        <p class="text-[var(--text-secondary)] mt-4">还没有对应网站，点击右上角按钮添加第一个网站吧</p>
         <button
           v-if="hasFilters"
           @click="resetFilters"
@@ -50,6 +43,7 @@
       @close="closeDetailDrawer"
     />
 
+    <!-- Website Form Modal -->
     <div v-if="showAddForm || showEditForm" class="modal-backdrop">
       <div class="modal-content">
         <button @click="closeForm" class="close-modal-btn">
@@ -71,16 +65,16 @@
       </div>
     </div>
 
-    <CategoryDialog
-      :is-open="showCategoryDialog"
-      @close="showCategoryDialog = false"
-      @submit="handleCategorySubmit"
+    <!-- Category Manage Modal -->
+    <CategoryManageModal
+      :is-open="showCategoryModal"
+      @close="showCategoryModal = false"
     />
 
-    <TagDialog
-      :is-open="showTagDialog"
-      @close="showTagDialog = false"
-      @submit="handleTagSubmit"
+    <!-- Tag Manage Modal -->
+    <TagManageModal
+      :is-open="showTagModal"
+      @close="showTagModal = false"
     />
   </main>
 </template>
@@ -94,12 +88,12 @@ import { useAppStore } from '@/stores/app'
 import WebsiteCard from '@/components/website/WebsiteCard.vue'
 import WebsiteDetailDrawer from '@/components/website/WebsiteDetailDrawer.vue'
 import WebsiteForm from '@/components/website/WebsiteForm.vue'
-import CategoryDialog from '@/components/common/CategoryDialog.vue'
-import TagDialog from '@/components/common/TagDialog.vue'
+import CategoryManageModal from '@/components/common/CategoryManageModal.vue'
+import TagManageModal from '@/components/common/TagManageModal.vue'
 import type { Website } from '@/types'
 
 const { websites, isLoading, loadWebsites, addWebsite, updateWebsite, deleteWebsite } = useWebsites()
-const { categories, loadCategories, addCategory, updateCategory } = useCategories()
+const { categories, loadCategories } = useCategories()
 const { loadTags } = useTags()
 const appStore = useAppStore()
 
@@ -108,8 +102,8 @@ const editingWebsite = ref<Website | null>(null)
 const showDetailDrawer = ref(false)
 const showAddForm = ref(false)
 const showEditForm = ref(false)
-const showCategoryDialog = ref(false)
-const showTagDialog = ref(false)
+const showCategoryModal = ref(false)
+const showTagModal = ref(false)
 
 onMounted(async () => {
   await Promise.all([
@@ -118,6 +112,23 @@ onMounted(async () => {
     loadTags()
   ])
 })
+
+// Expose openModal method for parent component
+const openModal = (type: 'website' | 'category' | 'tag') => {
+  switch (type) {
+    case 'website':
+      showAddForm.value = true
+      break
+    case 'category':
+      showCategoryModal.value = true
+      break
+    case 'tag':
+      showTagModal.value = true
+      break
+  }
+}
+
+defineExpose({ openModal })
 
 const title = computed(() => {
   if (appStore.filter.searchQuery) {
@@ -143,12 +154,12 @@ const filteredWebsites = computed(() => {
   }
 
   if (appStore.filter.categoryId) {
-    result = result.filter(w => w.categoryId === appStore.filter.categoryId)
+    result = result.filter(w => (w.categoryIds || []).includes(appStore.filter.categoryId!))
   }
 
   if (appStore.filter.tagIds.length > 0) {
     result = result.filter(w =>
-      appStore.filter.tagIds.some(tagId => w.tagIds.includes(tagId))
+      appStore.filter.tagIds.some(tagId => (w.tagIds || []).includes(tagId))
     )
   }
 
@@ -230,19 +241,6 @@ const closeForm = () => {
   showAddForm.value = false
   showEditForm.value = false
   editingWebsite.value = null
-}
-
-const handleCategorySubmit = async (data) => {
-  try {
-    await addCategory(data)
-  } catch (error) {
-    console.error('Failed to add category:', error)
-    alert('添加分类失败')
-  }
-}
-
-const handleTagSubmit = async (data) => {
-  console.log('Tag submit:', data)
 }
 </script>
 

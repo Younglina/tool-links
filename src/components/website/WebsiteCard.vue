@@ -5,6 +5,16 @@
   >
     <!-- Hover Actions -->
     <div class="card-actions">
+      <a
+        :href="website.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        @click.stop
+        class="action-btn action-link"
+        title="访问网站"
+      >
+        <i class="mdi mdi-open-in-new"></i>
+      </a>
       <button @click.stop="handleEdit" class="action-btn" title="编辑">
         <i class="mdi mdi-pencil-outline"></i>
       </button>
@@ -28,10 +38,16 @@
       </div>
       <div class="card-info">
         <h3 class="website-name">{{ website.name }}</h3>
-        <!-- Category as tag style -->
-        <span class="category-tag" v-if="categoryName">
-          {{ categoryName }}
-        </span>
+        <!-- Categories as tag style -->
+        <div class="category-tags" v-if="categoryNames.length > 0">
+          <span
+            v-for="name in categoryNames"
+            :key="name"
+            class="category-tag"
+          >
+            {{ name }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -93,10 +109,14 @@ const iconUrl = computed(() => {
 })
 
 const category = computed(() => {
-  return categories.value.find(c => c.id === props.website.categoryId)
+  return categories.value.find(c => (props.website.categoryIds || []).includes(c.id!))
 })
 
-const categoryName = computed(() => category.value?.name || '')
+const categoryNames = computed(() => {
+  return (props.website.categoryIds || [])
+    .map(id => categories.value.find(c => c.id === id)?.name)
+    .filter(Boolean) as string[]
+})
 
 const getTagName = (tagId: number) => {
   const tag = tags.value.find(t => t.id === tagId)
@@ -184,6 +204,16 @@ onUnmounted(() => {
   color: #ff3b30;
 }
 
+.action-btn.action-link:hover {
+  color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.neumorphism-theme .action-btn.action-link:hover {
+  box-shadow: 2px 2px 4px rgba(108, 99, 255, 0.3), -1px -1px 3px rgba(139, 132, 255, 0.2);
+}
+
 .action-btn .mdi {
   font-size: 1rem;
 }
@@ -262,7 +292,13 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* Category Tag */
+/* Category Tags */
+.category-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .category-tag {
   display: inline-block;
   width: fit-content;

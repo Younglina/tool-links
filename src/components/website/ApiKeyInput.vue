@@ -91,7 +91,6 @@ const removeKey = (index: number) => {
   emit('update:modelValue', newKeys)
 }
 
-// 获取包含当前输入框内容的所有 keys
 const getAllKeys = (): string[] => {
   const trimmed = newKey.value.trim()
   if (trimmed) {
@@ -100,7 +99,6 @@ const getAllKeys = (): string[] => {
   return [...apiKeys.value]
 }
 
-// 暴露方法给父组件
 defineExpose({
   getAllKeys
 })

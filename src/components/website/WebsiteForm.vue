@@ -45,16 +45,47 @@
 
       <div>
         <label class="block text-sm font-medium mb-2">分类 *</label>
-        <select v-model="form.categoryId" class="input" required>
-          <option value="">选择分类</option>
-          <option
-            v-for="category in categories"
-            :key="category.id"
-            :value="category.id"
+        <div class="multi-select" ref="categorySelectRef">
+          <div
+            class="multi-select-trigger"
+            @click="toggleCategoryDropdown"
+            :class="{ 'has-value': form.categoryIds.length > 0 }"
           >
-            {{ category.name }}
-          </option>
-        </select>
+            <div class="selected-items" v-if="form.categoryIds.length > 0">
+              <span
+                v-for="id in form.categoryIds"
+                :key="id"
+                class="selected-tag"
+              >
+                <i :class="['mdi', `mdi-${getCategoryIcon(id)}`]"></i>
+                {{ getCategoryName(id) }}
+                <button type="button" @click.stop="removeCategory(id)" class="remove-tag">
+                  <i class="mdi mdi-close"></i>
+                </button>
+              </span>
+            </div>
+            <span v-else class="placeholder">选择分类（可多选）</span>
+            <i class="mdi mdi-chevron-down dropdown-icon" :class="{ 'rotate': showCategoryDropdown }"></i>
+          </div>
+          <Transition name="dropdown">
+            <div v-if="showCategoryDropdown" class="multi-select-dropdown">
+              <div
+                v-for="category in categories"
+                :key="category.id"
+                class="dropdown-item"
+                :class="{ 'selected': form.categoryIds.includes(category.id!) }"
+                @click="toggleCategory(category.id!)"
+              >
+                <i :class="['mdi', `mdi-${category.iconName}`, 'item-icon']"></i>
+                <span class="item-name">{{ category.name }}</span>
+                <i v-if="form.categoryIds.includes(category.id!)" class="mdi mdi-check check-icon"></i>
+              </div>
+              <div v-if="categories.length === 0" class="dropdown-empty">
+                暂无分类
+              </div>
+            </div>
+          </Transition>
+        </div>
       </div>
 
       <div>
@@ -98,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, toRaw, watch } from 'vue'
+import { ref, reactive, onMounted, computed, toRaw, watch, onUnmounted } from 'vue'
 import type { Website } from '@/types'
 import { useCategories } from '@/composables/useCategories'
 import { useTags } from '@/composables/useTags'
@@ -121,6 +152,8 @@ const { tags, loadTags } = useTags()
 const isEditing = computed(() => !!props.website)
 const isSubmitting = ref(false)
 const apiKeyInputRef = ref<InstanceType<typeof ApiKeyInput> | null>(null)
+const showCategoryDropdown = ref(false)
+const categorySelectRef = ref<HTMLElement | null>(null)
 
 const form = reactive({
   name: '',
@@ -128,7 +161,7 @@ const form = reactive({
   icon: new ArrayBuffer(0),
   iconMimeType: '',
   description: '',
-  categoryId: 0,
+  categoryIds: [] as number[],
   tagIds: [] as number[],
   apiKeys: [] as string[]
 })
@@ -136,7 +169,46 @@ const form = reactive({
 onMounted(() => {
   loadCategories()
   loadTags()
+  document.addEventListener('click', handleClickOutside)
 })
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+const handleClickOutside = (e: MouseEvent) => {
+  if (categorySelectRef.value && !categorySelectRef.value.contains(e.target as Node)) {
+    showCategoryDropdown.value = false
+  }
+}
+
+const toggleCategoryDropdown = () => {
+  showCategoryDropdown.value = !showCategoryDropdown.value
+}
+
+const toggleCategory = (id: number) => {
+  const index = form.categoryIds.indexOf(id)
+  if (index === -1) {
+    form.categoryIds.push(id)
+  } else {
+    form.categoryIds.splice(index, 1)
+  }
+}
+
+const removeCategory = (id: number) => {
+  const index = form.categoryIds.indexOf(id)
+  if (index !== -1) {
+    form.categoryIds.splice(index, 1)
+  }
+}
+
+const getCategoryName = (id: number) => {
+  return categories.value.find(c => c.id === id)?.name || ''
+}
+
+const getCategoryIcon = (id: number) => {
+  return categories.value.find(c => c.id === id)?.iconName || 'folder'
+}
 
 // 监听 website prop 变化，初始化表单数据
 watch(() => props.website, (website) => {
@@ -146,7 +218,7 @@ watch(() => props.website, (website) => {
     form.icon = website.icon
     form.iconMimeType = website.iconMimeType
     form.description = website.description
-    form.categoryId = website.categoryId
+    form.categoryIds = [...(website.categoryIds || [])]
     form.tagIds = [...(website.tagIds || [])]
     form.apiKeys = [...(website.apiKeys || [])]
   } else {
@@ -156,7 +228,7 @@ watch(() => props.website, (website) => {
     form.icon = new ArrayBuffer(0)
     form.iconMimeType = ''
     form.description = ''
-    form.categoryId = 0
+    form.categoryIds = []
     form.tagIds = []
     form.apiKeys = []
   }
@@ -178,6 +250,11 @@ const handleSubmit = async () => {
     return
   }
 
+  if (form.categoryIds.length === 0) {
+    alert('请至少选择一个分类')
+    return
+  }
+
   isSubmitting.value = true
   try {
     // 获取所有 API Keys，包括输入框中未点击添加的
@@ -190,7 +267,7 @@ const handleSubmit = async () => {
       icon: rawForm.icon,
       iconMimeType: rawForm.iconMimeType,
       description: rawForm.description,
-      categoryId: rawForm.categoryId,
+      categoryIds: [...rawForm.categoryIds],
       tagIds: [...rawForm.tagIds],
       apiKeys: allApiKeys
     }
@@ -373,6 +450,179 @@ const handleApiKeysUpdate = (value: string[]) => {
 .neumorphism-theme .website-form .btn-secondary:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-extruded);
+}
+
+/* Multi-select dropdown styles */
+.multi-select {
+  position: relative;
+}
+
+.multi-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  min-height: 52px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+}
+
+.neumorphism-theme .multi-select-trigger {
+  box-shadow: var(--shadow-inset);
+}
+
+.neumorphism-theme .multi-select-trigger:hover {
+  box-shadow: var(--shadow-inset-deep);
+}
+
+.selected-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.selected-tag .mdi {
+  font-size: 0.875rem;
+}
+
+.remove-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.remove-tag:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.remove-tag .mdi {
+  font-size: 0.75rem;
+}
+
+.placeholder {
+  color: #A0AEC0;
+  font-size: 1rem;
+}
+
+.dropdown-icon {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+  margin-left: 8px;
+}
+
+.dropdown-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.neumorphism-theme .multi-select-dropdown {
+  box-shadow: var(--shadow-extruded);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:first-child {
+  border-radius: 12px 12px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 12px 12px;
+}
+
+.dropdown-item:only-child {
+  border-radius: 12px;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+.dropdown-item.selected {
+  background: rgba(108, 99, 255, 0.1);
+}
+
+.dropdown-item .item-icon {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.dropdown-item.selected .item-icon {
+  color: var(--accent);
+}
+
+.dropdown-item .item-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.dropdown-item.selected .item-name {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.dropdown-item .check-icon {
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.dropdown-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Dropdown transition */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 @media (max-width: 640px) {

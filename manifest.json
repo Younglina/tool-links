@@ -1,7 +1,7 @@
 {
-  "name": "AI工具集",
-  "short_name": "AI工具",
-  "description": "本地化AI网站管理平台",
+  "name": "工具集",
+  "short_name": "工具集",
+  "description": "本地化网站管理平台",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",

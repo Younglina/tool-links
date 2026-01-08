@@ -1,10 +1,10 @@
 <template>
   <div class="app" :class="`${currentTheme}-theme`">
-    <Header @toggle-sidebar="toggleSidebar" />
+    <Header @toggle-sidebar="toggleSidebar" @action="handleAction" />
 
     <div class="app-body">
       <Sidebar :is-open="isSidebarOpen" @close="isSidebarOpen = false" />
-      <MainContent />
+      <MainContent ref="mainContentRef" />
     </div>
   </div>
 </template>
@@ -21,9 +21,14 @@ useDexie()
 
 const { currentTheme } = useTheme()
 const isSidebarOpen = ref(false)
+const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
+}
+
+const handleAction = (type: 'website' | 'category' | 'tag') => {
+  mainContentRef.value?.openModal(type)
 }
 </script>
 

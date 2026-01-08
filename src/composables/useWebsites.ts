@@ -40,6 +40,7 @@ export const useWebsites = () => {
     try {
       const dataToUpdate = {
         ...updates,
+        categoryIds: updates.categoryIds ? [...updates.categoryIds] : undefined,
         tagIds: updates.tagIds ? [...updates.tagIds] : undefined,
         apiKeys: updates.apiKeys ? [...updates.apiKeys] : undefined,
         updatedAt: new Date()

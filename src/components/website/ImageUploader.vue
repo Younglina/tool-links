@@ -45,7 +45,6 @@ const emit = defineEmits<{
 const {
   selectedFile,
   previewUrl,
-  isUploading,
   error,
   handleFileSelect,
   processFile,
@@ -66,11 +65,6 @@ const handleFileChange = async (event: Event) => {
       emit('upload', result)
     }
   }
-}
-
-const handleReset = () => {
-  reset()
-  emit('remove')
 }
 </script>
 

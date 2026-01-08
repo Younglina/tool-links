@@ -6,7 +6,7 @@ export interface Website {
   iconMimeType: string
   description: string
   apiKeys: string[]
-  categoryId: number
+  categoryIds: number[]
   tagIds: number[]
   createdAt: Date
   updatedAt: Date

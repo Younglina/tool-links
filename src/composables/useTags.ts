@@ -28,6 +28,7 @@ export const useTags = () => {
   const addTag = async (tag: Omit<Tag, 'id'>) => {
     try {
       await db.tags.add(tag)
+      tagsLoaded = false
       await loadTags()
     } catch (error) {
       console.error('Failed to add tag:', error)
@@ -38,6 +39,7 @@ export const useTags = () => {
   const updateTag = async (id: number, updates: Partial<Tag>) => {
     try {
       await db.tags.update(id, updates)
+      tagsLoaded = false
       await loadTags()
     } catch (error) {
       console.error('Failed to update tag:', error)
@@ -48,6 +50,7 @@ export const useTags = () => {
   const deleteTag = async (id: number) => {
     try {
       await db.tags.delete(id)
+      tagsLoaded = false
       await loadTags()
     } catch (error) {
       console.error('Failed to delete tag:', error)

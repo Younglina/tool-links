@@ -55,7 +55,7 @@ const totalCount = computed(() => websites.value.length)
 const categoriesWithCount = computed(() => {
   return categories.value.map(category => ({
     ...category,
-    count: websites.value.filter(w => w.categoryId === category.id).length
+    count: websites.value.filter(w => (w.categoryIds || []).includes(category.id!)).length
   }))
 })
 
