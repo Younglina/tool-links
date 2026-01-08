@@ -49,7 +49,7 @@ const handleAction = (type: 'website' | 'category' | 'tag') => {
 
 .neumorphism-theme {
   font-family: 'DM Sans', sans-serif;
-  background-color: #E0E5EC;
+  background-color: var(--bg-primary);
 }
 
 .neumorphism-theme h1,
