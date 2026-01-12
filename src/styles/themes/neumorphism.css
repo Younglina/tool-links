@@ -1,41 +1,41 @@
 /* Neumorphism (Soft UI) Design System Theme */
 
 :root[data-theme="neumorphism"] {
-  /* Core Colors - Cool Monochromatic */
-  --bg-primary: #E0E5EC;
-  --bg-secondary: #E0E5EC;
-  --bg-tertiary: #E0E5EC;
+  /* Core Colors - Brighter, cleaner look */
+  --bg-primary: #F0F4F8;
+  --bg-secondary: #E8EDF2;
+  --bg-tertiary: #F0F4F8;
 
   /* Text Colors - WCAG Compliant */
-  --text-primary: #3D4852;    /* 7.5:1 contrast ratio - AAA */
-  --text-secondary: #6B7280;  /* 4.6:1 contrast ratio - AA */
+  --text-primary: #2D3748;    /* Darker for better contrast */
+  --text-secondary: #718096;  /* Softer secondary */
 
   /* Accent Colors */
-  --accent: #1a73e8;          
-  --accent-light: #1669d5;    /* Light violet for hover */
-  --accent-glow: rgba(108, 99, 255, 0.15);
+  --accent: #1a73e8;
+  --accent-light: #4a90f0;    /* Lighter for hover */
+  --accent-glow: rgba(26, 115, 232, 0.15);
   --secondary-accent: #38B2AC; /* Teal for success states */
 
   /* No borders in neumorphism - shadows define edges */
   --border: transparent;
 
   /* Card backgrounds match page */
-  --card-bg: #E0E5EC;
-  --hover-bg: #E0E5EC;
+  --card-bg: #F0F4F8;
+  --hover-bg: #F0F4F8;
 
-  /* Shadow Colors - RGBA for smooth blending */
-  --shadow-dark: rgb(163, 177, 198, 0.6);
-  --shadow-dark-strong: rgb(163, 177, 198, 0.7);
-  --shadow-light: rgba(255, 255, 255, 0.5);
-  --shadow-light-strong: rgba(255, 255, 255, 0.6);
+  /* Shadow Colors - Adjusted for brighter background */
+  --shadow-dark: rgba(174, 190, 205, 0.5);
+  --shadow-dark-strong: rgba(174, 190, 205, 0.6);
+  --shadow-light: rgba(255, 255, 255, 0.8);
+  --shadow-light-strong: rgba(255, 255, 255, 0.9);
 
-  /* Neumorphism Shadows */
-  --shadow-extruded: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5);
-  --shadow-extruded-hover: 12px 12px 20px rgb(163,177,198,0.7), -12px -12px 20px rgba(255,255,255,0.6);
-  --shadow-extruded-small: 5px 5px 10px rgb(163,177,198,0.6), -5px -5px 10px rgba(255,255,255,0.5);
-  --shadow-inset: inset 6px 6px 10px rgb(163,177,198,0.6), inset -6px -6px 10px rgba(255,255,255,0.5);
-  --shadow-inset-deep: inset 10px 10px 20px rgb(163,177,198,0.7), inset -10px -10px 20px rgba(255,255,255,0.6);
-  --shadow-inset-small: inset 3px 3px 6px rgb(163,177,198,0.6), inset -3px -3px 6px rgba(255,255,255,0.5);
+  /* Neumorphism Shadows - Softer for brighter theme */
+  --shadow-extruded: 8px 8px 16px rgba(174, 190, 205, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.8);
+  --shadow-extruded-hover: 10px 10px 20px rgba(174, 190, 205, 0.55), -10px -10px 20px rgba(255, 255, 255, 0.85);
+  --shadow-extruded-small: 4px 4px 8px rgba(174, 190, 205, 0.45), -4px -4px 8px rgba(255, 255, 255, 0.8);
+  --shadow-inset: inset 5px 5px 10px rgba(174, 190, 205, 0.5), inset -5px -5px 10px rgba(255, 255, 255, 0.8);
+  --shadow-inset-deep: inset 8px 8px 16px rgba(174, 190, 205, 0.55), inset -8px -8px 16px rgba(255, 255, 255, 0.85);
+  --shadow-inset-small: inset 2px 2px 5px rgba(174, 190, 205, 0.45), inset -2px -2px 5px rgba(255, 255, 255, 0.8);
 
   /* Legacy shadow variables for compatibility */
   --shadow: var(--shadow-extruded);
