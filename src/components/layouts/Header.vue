@@ -41,9 +41,41 @@
                 <i class="mdi mdi-tag-outline"></i>
                 <span>标签管理</span>
               </button>
+              <div class="dropdown-divider"></div>
+              <button @click="handleAction('export')" class="dropdown-item">
+                <i class="mdi mdi-export"></i>
+                <span>导出数据</span>
+              </button>
+              <label class="dropdown-item">
+                <i class="mdi mdi-import"></i>
+                <span>导入数据</span>
+                <input type="file" accept=".json" @change="handleImportClick" @click.stop hidden />
+              </label>
             </div>
           </Transition>
         </div>
+
+        <Teleport to="body">
+          <div v-if="showImportDialog" class="modal-overlay" @click="showImportDialog = false">
+            <div class="modal-content" @click.stop>
+              <h3 class="modal-title">导入数据</h3>
+              <p class="modal-desc">请选择导入方式：</p>
+              <div class="modal-actions">
+                <button @click="handleImportConfirm('merge')" class="modal-btn primary">
+                  <i class="mdi mdi-merge"></i>
+                  合并（跳过重复）
+                </button>
+                <button @click="handleImportConfirm('replace')" class="modal-btn danger">
+                  <i class="mdi mdi-replace"></i>
+                  替换（清空现有数据）
+                </button>
+              </div>
+              <button @click="showImportDialog = false" class="modal-close">
+                <i class="mdi mdi-close"></i>
+              </button>
+            </div>
+          </div>
+        </Teleport>
       </div>
     </div>
   </header>
@@ -52,14 +84,19 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import SearchBar from '@/components/filter/SearchBar.vue'
+import { exportData, importData } from '@/composables/useImportExport'
 
 const emit = defineEmits<{
   (e: 'toggle-sidebar'): void
-  (e: 'action', type: 'website' | 'category' | 'tag'): void
+  (e: 'action', type: 'website' | 'category' | 'tag' | 'export' | 'import'): void
 }>()
 
 const showDropdown = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
+const importing = ref(false)
+const exporting = ref(false)
+const showImportDialog = ref(false)
+let pendingImportFile: File | null = null
 
 const toggleSidebar = () => {
   emit('toggle-sidebar')
@@ -69,9 +106,56 @@ const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
 }
 
-const handleAction = (type: 'website' | 'category' | 'tag') => {
+const handleAction = (type: 'website' | 'category' | 'tag' | 'export' | 'import') => {
+  if (type === 'export') {
+    handleExport()
+  } else {
+    showDropdown.value = false
+    emit('action', type)
+  }
+}
+
+const handleExport = async () => {
   showDropdown.value = false
-  emit('action', type)
+  exporting.value = true
+  try {
+    await exportData()
+  } catch (error) {
+    console.error('Failed to export:', error)
+    alert('导出失败')
+  } finally {
+    exporting.value = false
+  }
+}
+
+const handleImportClick = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  showDropdown.value = false
+  pendingImportFile = file
+  showImportDialog.value = true
+  input.value = ''
+}
+
+const handleImportConfirm = async (mode: 'merge' | 'replace') => {
+  if (!pendingImportFile) return
+
+  showImportDialog.value = false
+  importing.value = true
+
+  try {
+    const result = await importData(pendingImportFile, mode)
+    const modeText = mode === 'merge' ? '合并' : '替换'
+    alert(`${modeText}成功！\n新增网站: ${result.websites}\n分类: ${result.categories}\n标签: ${result.tags}`)
+  } catch (error) {
+    console.error('Failed to import:', error)
+    alert('导入失败')
+  } finally {
+    importing.value = false
+    pendingImportFile = null
+  }
 }
 
 const handleClickOutside = (e: MouseEvent) => {
@@ -267,6 +351,16 @@ onUnmounted(() => {
   color: var(--accent);
 }
 
+.dropdown-item input {
+  display: none;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--bg-secondary);
+  margin: 4px 0;
+}
+
 /* Dropdown transition */
 .dropdown-enter-active,
 .dropdown-leave-active {
@@ -336,5 +430,95 @@ onUnmounted(() => {
     right: 0;
     left: auto;
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  min-width: 300px;
+}
+
+.neumorphism-theme .modal-content {
+  box-shadow: var(--shadow-extruded);
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.modal-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.modal-btn.primary {
+  background: var(--accent);
+  color: white;
+}
+
+.modal-btn.danger {
+  background: #ff3b30;
+  color: white;
+}
+
+.modal-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
 }
 </style>

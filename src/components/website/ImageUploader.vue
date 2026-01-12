@@ -99,7 +99,7 @@ const handleFileChange = async (event: Event) => {
 .preview-image {
   width: 128px;
   height: 128px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   border: 2px solid var(--border);
 }

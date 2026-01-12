@@ -244,7 +244,7 @@ onUnmounted(() => {
 .website-icon {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 14px;
   background: var(--bg-primary);
 }
