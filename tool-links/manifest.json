@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "工具集",
+  "version": "1.0",
+  "description": "本地化网站管理平台",
+  "action": {
+    "default_icon": {
+      "16": "tools.png",
+      "48": "tools.png",
+      "128": "tools.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "tools.png",
+    "48": "tools.png",
+    "128": "tools.png"
+  }
+}
