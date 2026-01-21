@@ -1,0 +1,11 @@
+# robots.txt for AI工具集
+# https://younglina.wang/tool-links/
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://younglina.wang/tool-links/sitemap.xml
+
+# Crawl-delay (optional, for politeness)
+Crawl-delay: 1
