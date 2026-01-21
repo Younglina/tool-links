@@ -39,15 +39,8 @@ npm run dev
 访问 http://localhost:3000
 
 ### 构建 Chrome 扩展
-```bash
-# Windows
-pack.bat
 
-# Linux/Mac
-./pack.sh
-```
-
-构建完成后，`dist` 目录包含完整的 Chrome 扩展文件。
+注意修改 `vite.config.ts` 中的 `base` 为 `/` ,构建完成后，`dist` 目录包含完整的 Chrome 扩展文件。
 
 ## 安装 Chrome 扩展
 
