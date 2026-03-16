@@ -6,6 +6,9 @@
       <Sidebar :is-open="isSidebarOpen" @close="isSidebarOpen = false" />
       <MainContent ref="mainContentRef" />
     </div>
+
+    <!-- 同步设置模态框 -->
+    <SyncSettings :open="showSyncModal" @close="showSyncModal = false" @synced="handleSynced" />
   </div>
 </template>
 
@@ -15,20 +18,31 @@ import { useTheme } from '@/composables/useTheme'
 import Header from '@/components/layouts/Header.vue'
 import Sidebar from '@/components/layouts/Sidebar.vue'
 import MainContent from '@/components/layouts/MainContent.vue'
+import SyncSettings from '@/components/SyncSettings.vue'
 import { useDexie } from '@/composables/useDexie'
 
 useDexie()
 
 const { currentTheme } = useTheme()
 const isSidebarOpen = ref(false)
+const showSyncModal = ref(false)
 const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
-const handleAction = (type: 'website' | 'category' | 'tag') => {
-  mainContentRef.value?.openModal(type)
+const handleAction = (type: 'website' | 'category' | 'tag' | 'sync') => {
+  if (type === 'sync') {
+    showSyncModal.value = true
+  } else {
+    mainContentRef.value?.openModal(type)
+  }
+}
+
+const handleSynced = () => {
+  // 同步完成后重新加载数据
+  mainContentRef.value?.refreshData()
 }
 </script>
 

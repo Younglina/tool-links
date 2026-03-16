@@ -51,6 +51,11 @@
                 <span>导入数据</span>
                 <input type="file" accept=".json" @change="handleImportClick" @click.stop hidden />
               </label>
+              <div class="dropdown-divider"></div>
+              <button @click="handleAction('sync')" class="dropdown-item">
+                <i class="mdi mdi-cloud-sync"></i>
+                <span>远程同步</span>
+              </button>
             </div>
           </Transition>
         </div>
@@ -88,7 +93,7 @@ import { exportData, importData } from '@/composables/useImportExport'
 
 const emit = defineEmits<{
   (e: 'toggle-sidebar'): void
-  (e: 'action', type: 'website' | 'category' | 'tag' | 'export' | 'import'): void
+  (e: 'action', type: 'website' | 'category' | 'tag' | 'export' | 'import' | 'sync'): void
 }>()
 
 const showDropdown = ref(false)

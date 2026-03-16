@@ -128,7 +128,16 @@ const openModal = (type: 'website' | 'category' | 'tag') => {
   }
 }
 
-defineExpose({ openModal })
+// Refresh data after sync
+const refreshData = async () => {
+  await Promise.all([
+    loadWebsites(),
+    loadCategories(),
+    loadTags()
+  ])
+}
+
+defineExpose({ openModal, refreshData })
 
 const title = computed(() => {
   if (appStore.filter.searchQuery) {
